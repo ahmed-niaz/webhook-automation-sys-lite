@@ -1,0 +1,19 @@
+{
+  "name": "webhook-automation-sys-lite",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Express.js monorepo powered by pnpm workspaces",
+  "scripts": {
+    "dev": "pnpm --filter lms dev",
+    "dev:all": "pnpm -r --parallel run dev",
+    "dev:lms": "pnpm --filter lms dev",
+    "dev:automator": "pnpm --filter automator dev",
+    "build": "pnpm -r run build",
+    "build:lms": "pnpm --filter lms build",
+    "build:automator": "pnpm --filter automator build",
+    "start": "pnpm --filter lms start"
+  },
+  "devDependencies": {
+    "typescript": "^5.7.3"
+  }
+}
