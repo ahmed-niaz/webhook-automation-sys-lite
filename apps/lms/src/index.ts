@@ -1,8 +1,9 @@
 import express, { type Express, type Request, type Response, type NextFunction } from "express";
 import cors from "cors";
 import dotenv from "dotenv";
+import { webhookRouter, sendWebhooks, db, type Payload } from "./webhooks/index.js";
 
-dotenv.config();
+dotenv.config({ path: [".env", "../../.env"] });
 
 const app: Express = express();
 const PORT = process.env.PORT || 4000;
@@ -34,14 +35,43 @@ app.get("/health", (_req: Request, res: Response) => {
   });
 });
 
-// Sample API Routes
+// API Routes
 const apiRouter = express.Router();
 
 apiRouter.get("/", (_req: Request, res: Response) => {
   res.json({ message: "Welcome to LMS API" });
 });
 
+// Webhook Routes
+apiRouter.use(webhookRouter);
 
+apiRouter.post('/purchase', (req: Request, res: Response) => {
+  const { name, email, courseTitle } = req.body;
+  // initial purchase processing
+  // sending webhooks
+  const payload: Payload = {
+    id: Date.now().toString(),
+    name,
+    email,
+    courseTitle
+  };
+
+  // async
+  const webhooks = db.filter((webhook) => webhook.event === 'purchase');
+  if (webhooks.length === 0) {
+    console.log('[LMS] Warning: No webhooks registered in memory for event "purchase". Call POST /api/register-webhook first.');
+  }
+
+  sendWebhooks(webhooks, payload)
+    .then(() => {
+      console.log(`[LMS] Webhooks dispatched (${webhooks.length} sent).`);
+    })
+    .catch((err) => {
+      console.error('[LMS] Error dispatching webhooks:', err);
+    });
+
+  return res.json({ message: 'course purchse successfull' });
+});
 
 app.use("/api", apiRouter);
 

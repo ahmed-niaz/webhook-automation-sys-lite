@@ -1,6 +1,6 @@
 # Webhook Automation Sys Lite
 
-A modular Express.js TypeScript monorepo managed with **pnpm workspaces**.
+A modular Express.js TypeScript monorepo managed with **pnpm workspaces**, demonstrating webhook event dispatching between an LMS service and an Automator service.
 
 ## Folder Structure
 
@@ -14,9 +14,12 @@ webhook_automation_sys_lite/
 │   │   └── tsconfig.json
 │   └── lms/
 │       ├── src/
+│       │   ├── webhooks/
+│       │   │   └── index.ts
 │       │   └── index.ts
 │       ├── package.json
 │       └── tsconfig.json
+├── .env
 ├── .gitignore
 ├── bts.jsonc
 ├── package.json
@@ -31,50 +34,72 @@ webhook_automation_sys_lite/
 - [Node.js](https://nodejs.org/) (v18 or higher)
 - [pnpm](https://pnpm.io/) (v8 or higher)
 
-### 2. Installation
+### 2. Environment Configuration
+Create a `.env` file at the root:
+```env
+SECRET_WEBHOOK_TOKEN="loser-have-no-secret"
+```
+
+### 3. Installation
 Install all dependencies across the workspace:
 ```bash
 pnpm install
 ```
 
-### 3. Development
-Run the LMS Express server :
-```bash
-pnpm dev:lms
-```
-
-Run the Automator server :
-```bash
-pnpm dev:automator
-```
-
-Or run all applications concurrently:
+### 4. Development
+Run both applications concurrently:
 ```bash
 pnpm dev:all
 ```
 
-### 4. Build
+Or run them individually:
+```bash
+# LMS server on http://localhost:4000
+pnpm dev:lms
+
+# Automator server on http://localhost:4001
+pnpm dev:automator
+```
+
+### 5. Build
 Compile TypeScript to JavaScript for production:
 ```bash
 pnpm build
 ```
 
-### 5. Production
+### 6. Production
 Start the compiled LMS server:
 ```bash
 pnpm start
 ```
 
-## API Endpoints
+---
 
-### LMS Server 
+## API Endpoints & Webhook Workflow
+
+### 1. LMS Service (`http://localhost:4000`)
 - `GET /` - Service info
 - `GET /health` - Health check
-- `GET /api/courses` - Sample courses list
-- `POST /api/webhook` - Webhook receiver
+- `POST /api/register-webhook` - Register a webhook endpoint:
+  ```json
+  {
+    "url": "http://localhost:4001/webhook",
+    "token": "loser-have-no-secret",
+    "event": "purchase"
+  }
+  ```
+- `POST /api/purchase` - Trigger a course purchase event:
+  ```json
+  {
+    "name": "Ahmed",
+    "email": "ahmed@example.com",
+    "courseTitle": "TypeScript Monorepo Mastery"
+  }
+  ```
 
-### Automator Server 
+### 2. Automator Service (`http://localhost:4001`)
 - `GET /` - Service info
 - `GET /health` - Health check
-- `POST /trigger` - Automation task trigger
-
+- `POST /webhook` - Receives incoming webhook events:
+  - Validates `x-webhook-token` header against `SECRET_WEBHOOK_TOKEN`
+  - Processes automated actions (e.g. invite dispatch)
